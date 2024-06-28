@@ -59,7 +59,7 @@ docker run -d --name tf2-server \
   -e TF2_PORT=27015 \
   -e TF2_SOURCETVPORT="27020" \
   -e TF2_TICKRATE="" \
-  -v /home/ponfertato/Docker/tf2-server:/home/steam/teamfortress2-server/tf \
+  -v /home/ponfertato/Docker/tf2-server:/home/steam/tf2-server/tf \
   ponfertato/tf2:latest
 ```
 
@@ -89,7 +89,7 @@ services:
       - TF2_SOURCETVPORT="27020"
       - TF2_TICKRATE=""
     volumes:
-      - ./tf2-server:/home/steam/teamfortress2-server/tf
+      - ./tf2-server:/home/steam/tf2-server/tf
 ```
 
 **Health Check**
