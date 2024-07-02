@@ -1,12 +1,7 @@
-FROM sonroyaalmerol/steamcmd-arm64:root as build_stage
+FROM sonroyaalmerol/steamcmd-arm64:root AS build_stage
 
 LABEL maintainer="ponfertato@ya.ru"
-LABEL description="A Dockerised version of the Garry's Mod dedicated server for ARM64 (using box86)"
-
-ENV STEAMAPPID 232250
-ENV STEAMAPP tf2
-ENV STEAMAPPDIR /home/steam/${STEAMAPP}-server
-ENV HOMEDIR /home/steam
+LABEL description="A Dockerised version of the Team Fortress 2 dedicated server for ARM64 (using box86)"
 
 RUN dpkg --add-architecture amd64 \
     && dpkg --add-architecture i386 \
@@ -26,18 +21,21 @@ RUN dpkg --add-architecture amd64 \
     && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_i386.deb \
     && dpkg -i libssl1.1_1.1.1f-1ubuntu2_i386.deb \
     && rm libssl1.1_1.1.1f-1ubuntu2_i386.deb \
-    && rm -rf /var/lib/apt/lists/* 
+    && rm -rf /var/lib/apt/lists/*
+
+ENV HOMEDIR="/home/steam" \
+    STEAMAPPID="232250" \
+    STEAMAPPDIR="/home/steam/tf2-server"
+
 
 COPY etc/entry.sh ${HOMEDIR}/entry.sh
 
 WORKDIR ${STEAMAPPDIR}
 
 RUN chmod +x "${HOMEDIR}/entry.sh" \
-    && chown -R "${USER}:${USER}" "${HOMEDIR}/entry.sh" "${STEAMAPPDIR}"
+    && chown -R "${USER}":"${USER}" "${HOMEDIR}/entry.sh" ${STEAMAPPDIR}
 
 FROM build_stage AS bookworm-root
-
-EXPOSE 27015/tcp 27015/udp 27005/udp 27020/udp
 
 ENV TF2_ARGS=""\
     TF2_CLIENTPORT="27005" \
@@ -49,11 +47,15 @@ ENV TF2_ARGS=""\
     TF2_SOURCETVPORT="27020" \
     TF2_TICKRATE=""
 
-USER ${USER}
+EXPOSE ${TF2_CLIENTPORT}/udp \
+    ${TF2_PORT}/tcp \
+    ${TF2_PORT}/udp \
+    ${TF2_SOURCETVPORT}/udp
 
+USER ${USER}
 WORKDIR ${HOMEDIR}
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD netstat -l | grep "27015.*LISTEN"
+    CMD netstat -l | grep "${TF2_PORT}.*LISTEN"
 
 CMD ["bash", "entry.sh"]
